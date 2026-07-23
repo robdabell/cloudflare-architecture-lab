@@ -32,4 +32,3 @@ tasks/                   Bounded implementation briefs
 ## Next action
 
 Run the task in `tasks/001-bootstrap-vertical-slice.md` with Codex. It deliberately stops short of deployment or external resource creation.
-
