@@ -1,0 +1,120 @@
+import { useState } from "react";
+import { Plus } from "lucide-react";
+import { projectInputSchema, type ProjectInput } from "@/shared/contracts";
+import { PageHeader } from "../components/architecture-lab/PageHeader";
+import { ProjectCard } from "../components/architecture-lab/ProjectCard";
+import { EmptyState } from "../components/architecture-lab/EmptyState";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
+import { api } from "../lib/api";
+import { useProjects } from "../hooks/useProjects";
+const initial: ProjectInput = { name: "", summary: "", status: "draft" };
+export function ProjectsPage() {
+  const { projects, loading, error, reload } = useProjects();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(initial);
+  const [formError, setFormError] = useState("");
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsed = projectInputSchema.safeParse(form);
+    if (!parsed.success) {
+      setFormError(
+        parsed.error.issues[0]?.message ?? "Check the project details.",
+      );
+      return;
+    }
+    try {
+      await api.createProject(parsed.data);
+      setOpen(false);
+      setForm(initial);
+      await reload();
+    } catch (err) {
+      setFormError(
+        err instanceof Error ? err.message : "Could not create project.",
+      );
+    }
+  }
+  return (
+    <>
+      <PageHeader
+        eyebrow="Project catalogue"
+        title="Projects"
+        description="Architecture workspaces and their current publication state."
+        action={
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="mr-2 size-4" />
+            New project
+          </Button>
+        }
+      />
+      {error && (
+        <p role="alert" className="mb-4 text-destructive">
+          {error}
+        </p>
+      )}
+      {loading ? (
+        <p className="text-muted-foreground">Loading projects…</p>
+      ) : projects.length ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {projects.map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="No projects yet"
+          description="Create the first architecture project to begin modelling the workspace."
+        />
+      )}
+      {open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="new-project-title"
+          className="fixed inset-0 z-30 grid place-items-end bg-black/40 p-0 sm:place-items-center sm:p-4"
+        >
+          <form
+            onSubmit={submit}
+            className="w-full max-w-lg rounded-t-3xl bg-surface p-6 shadow-xl sm:rounded-3xl"
+          >
+            <h2 id="new-project-title" className="text-xl font-bold">
+              Create project
+            </h2>
+            <label className="mt-5 block text-sm font-semibold">
+              Name
+              <Input
+                className="mt-1"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+            </label>
+            <label className="mt-4 block text-sm font-semibold">
+              Summary
+              <Textarea
+                className="mt-1"
+                value={form.summary}
+                onChange={(e) => setForm({ ...form, summary: e.target.value })}
+              />
+            </label>
+            {formError && (
+              <p role="alert" className="mt-3 text-sm text-destructive">
+                {formError}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                type="button"
+                className="bg-muted text-foreground"
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Create</Button>
+            </div>
+          </form>
+        </div>
+      )}
+    </>
+  );
+}

@@ -1,0 +1,345 @@
+import { useEffect, useMemo, useState } from "react";
+import {
+  Bookmark,
+  BookmarkCheck,
+  CarFront,
+  Cloud,
+  Database,
+  Gauge,
+  Server,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import type { SportsCar, SportsCarPreferences } from "@/shared/contracts";
+import { PageHeader } from "../components/architecture-lab/PageHeader";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+import { api } from "../lib/api";
+import { matchCars } from "../lib/carMatcher";
+
+const initial: SportsCarPreferences = {
+  budget: "serious",
+  use: "weekend",
+  character: "precision",
+  roof: "either",
+  seats: "two",
+  powertrain: "any",
+};
+const selectClass =
+  "mt-2 min-h-11 w-full rounded-xl border border-border bg-surface px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent";
+
+export function SportsCarFinderPage() {
+  const [preferences, setPreferences] = useState(initial);
+  const [cars, setCars] = useState<SportsCar[]>([]);
+  const [saved, setSaved] = useState<Set<string>>(new Set());
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    Promise.all([api.listCars(), api.listSavedCars()])
+      .then(([catalogue, shortlist]) => {
+        setCars(catalogue);
+        setSaved(new Set(shortlist.map((item) => item.carId)));
+      })
+      .catch((cause: unknown) =>
+        setError(
+          cause instanceof Error ? cause.message : "Could not load cars.",
+        ),
+      )
+      .finally(() => setLoading(false));
+  }, []);
+  const matches = useMemo(
+    () => matchCars(cars, preferences),
+    [cars, preferences],
+  );
+
+  async function toggleSaved(carId: string) {
+    setError("");
+    try {
+      if (saved.has(carId)) await api.removeSavedCar(carId);
+      else await api.saveCar(carId);
+      setSaved((current) => {
+        const next = new Set(current);
+        if (next.has(carId)) next.delete(carId);
+        else next.add(carId);
+        return next;
+      });
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Could not update shortlist.",
+      );
+    }
+  }
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="Cloudflare sample application"
+        title="Sports Car Finder"
+        description="Shape the drive you want. A transparent scoring model ranks a D1-backed catalogue and saves your shortlist securely."
+      />
+      <div className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
+        <Card className="h-fit">
+          <div className="flex items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-xl bg-primary text-white">
+              <Gauge className="size-5" aria-hidden />
+            </span>
+            <div>
+              <h2 className="font-semibold">Build your brief</h2>
+              <p className="text-sm text-muted-foreground">
+                Results update instantly.
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+            <Choice
+              label="Budget band"
+              value={preferences.budget}
+              options={[
+                ["accessible", "Accessible fun"],
+                ["serious", "Serious sports car"],
+                ["exotic", "Exotic territory"],
+              ]}
+              onChange={(budget) =>
+                setPreferences({
+                  ...preferences,
+                  budget: budget as SportsCarPreferences["budget"],
+                })
+              }
+            />
+            <Choice
+              label="Primary use"
+              value={preferences.use}
+              options={[
+                ["weekend", "Weekend escapes"],
+                ["daily", "Daily driving"],
+                ["track", "Track days"],
+              ]}
+              onChange={(use) =>
+                setPreferences({
+                  ...preferences,
+                  use: use as SportsCarPreferences["use"],
+                })
+              }
+            />
+            <Choice
+              label="Character"
+              value={preferences.character}
+              options={[
+                ["precision", "Precision"],
+                ["theatre", "Theatre"],
+                ["touring", "Grand touring"],
+              ]}
+              onChange={(character) =>
+                setPreferences({
+                  ...preferences,
+                  character: character as SportsCarPreferences["character"],
+                })
+              }
+            />
+            <Choice
+              label="Roof"
+              value={preferences.roof}
+              options={[
+                ["either", "Either"],
+                ["coupe", "Coupe"],
+                ["convertible", "Convertible"],
+              ]}
+              onChange={(roof) =>
+                setPreferences({
+                  ...preferences,
+                  roof: roof as SportsCarPreferences["roof"],
+                })
+              }
+            />
+            <Choice
+              label="Seats"
+              value={preferences.seats}
+              options={[
+                ["two", "Two is enough"],
+                ["four", "Need four seats"],
+              ]}
+              onChange={(seats) =>
+                setPreferences({
+                  ...preferences,
+                  seats: seats as SportsCarPreferences["seats"],
+                })
+              }
+            />
+            <Choice
+              label="Powertrain"
+              value={preferences.powertrain}
+              options={[
+                ["any", "Open to anything"],
+                ["petrol", "Petrol"],
+                ["hybrid", "Hybrid"],
+                ["electric", "Electric"],
+              ]}
+              onChange={(powertrain) =>
+                setPreferences({
+                  ...preferences,
+                  powertrain: powertrain as SportsCarPreferences["powertrain"],
+                })
+              }
+            />
+          </div>
+        </Card>
+        <section>
+          {error && (
+            <p
+              role="alert"
+              className="mb-4 rounded-xl bg-destructive/10 p-3 text-destructive"
+            >
+              {error}
+            </p>
+          )}
+          {loading ? (
+            <p className="text-muted-foreground">Loading the D1 catalogue…</p>
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {matches.map((car, index) => (
+                <Card
+                  key={car.id}
+                  className={
+                    index === 0 ? "border-accent ring-1 ring-accent" : ""
+                  }
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+                        {index === 0 ? "Best match" : car.priceBand}
+                      </p>
+                      <h2 className="mt-1 text-xl font-bold">
+                        {car.make} {car.model}
+                      </h2>
+                    </div>
+                    <span className="grid size-14 shrink-0 place-items-center rounded-full bg-primary text-lg font-bold text-white">
+                      {car.matchScore}%
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {car.summary}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+                    <Tag>{car.bodyStyle}</Tag>
+                    <Tag>{car.seats} seats</Tag>
+                    <Tag>{car.powertrain}</Tag>
+                  </div>
+                  <ul className="mt-4 space-y-1 text-sm">
+                    {car.reasons.map((reason) => (
+                      <li key={reason}>✓ {reason}</li>
+                    ))}
+                  </ul>
+                  <Button
+                    type="button"
+                    className={
+                      saved.has(car.id)
+                        ? "mt-5 w-full bg-success"
+                        : "mt-5 w-full"
+                    }
+                    onClick={() => void toggleSaved(car.id)}
+                  >
+                    {saved.has(car.id) ? (
+                      <BookmarkCheck className="mr-2 size-4" aria-hidden />
+                    ) : (
+                      <Bookmark className="mr-2 size-4" aria-hidden />
+                    )}
+                    {saved.has(car.id)
+                      ? "Saved to shortlist"
+                      : "Save to shortlist"}
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          )}
+          <Card className="mt-6">
+            <h2 className="font-semibold">
+              Cloudflare features in this sample
+            </h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Feature icon={Server} name="Workers" detail="API and policy" />
+              <Feature
+                icon={Cloud}
+                name="Static Assets"
+                detail="Responsive React UI"
+              />
+              <Feature icon={Database} name="D1" detail="Cars and shortlists" />
+              <Feature
+                icon={CarFront}
+                name="Access-ready"
+                detail="Identity boundary"
+              />
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Workers AI, Vectorize, R2, Queues, Workflows, and Browser
+              Rendering remain later extensions because this slice does not yet
+              need semantic search, media, or generated reports.{" "}
+              <Link
+                className="font-semibold text-accent underline"
+                to="/projects/sports-car-finder"
+              >
+                View its architecture model.
+              </Link>
+            </p>
+          </Card>
+          <p className="mt-4 text-xs text-muted-foreground">
+            Illustrative catalogue only. Model availability, specification,
+            pricing, safety, running costs, and suitability must be verified
+            before any purchase.
+          </p>
+        </section>
+      </div>
+    </>
+  );
+}
+
+function Choice({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[][];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="text-sm font-semibold">
+      {label}
+      <select
+        className={selectClass}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {options.map(([option, text]) => (
+          <option key={option} value={option}>
+            {text}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+function Tag({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-full bg-muted px-2.5 py-1 capitalize text-muted-foreground">
+      {children}
+    </span>
+  );
+}
+function Feature({
+  icon: Icon,
+  name,
+  detail,
+}: {
+  icon: typeof Server;
+  name: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-xl bg-muted/60 p-3">
+      <Icon className="size-5 text-accent" aria-hidden />
+      <p className="mt-2 text-sm font-semibold">{name}</p>
+      <p className="text-xs text-muted-foreground">{detail}</p>
+    </div>
+  );
+}

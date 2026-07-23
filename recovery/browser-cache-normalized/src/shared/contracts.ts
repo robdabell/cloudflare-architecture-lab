@@ -1,0 +1,69 @@
+import { z } from "zod";
+
+export const projectStatuses = ["draft", "review", "published"] as const;
+export const projectInputSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  summary: z.string().trim().min(10).max(500),
+  status: z.enum(projectStatuses),
+});
+export type ProjectInput = z.infer<typeof projectInputSchema>;
+export type Project = ProjectInput & { id: string; updatedAt: string };
+export type ArchitectureNode = {
+  id: string;
+  projectId: string;
+  label: string;
+  kind: string;
+  description: string;
+  positionX: number;
+  positionY: number;
+};
+export type ProjectDetail = Project & { nodes: ArchitectureNode[] };
+export const sportsCarPreferenceSchema = z.object({
+  budget: z.enum(["accessible", "serious", "exotic"]),
+  use: z.enum(["weekend", "daily", "track"]),
+  character: z.enum(["precision", "theatre", "touring"]),
+  roof: z.enum(["either", "coupe", "convertible"]),
+  seats: z.enum(["two", "four"]),
+  powertrain: z.enum(["any", "petrol", "hybrid", "electric"]),
+});
+export type SportsCarPreferences = z.infer<typeof sportsCarPreferenceSchema>;
+export type SportsCar = {
+  id: string;
+  make: string;
+  model: string;
+  summary: string;
+  priceBand: SportsCarPreferences["budget"];
+  bodyStyle: "coupe" | "convertible";
+  seats: number;
+  powertrain: "petrol" | "hybrid" | "electric";
+  character: SportsCarPreferences["character"];
+  dailyScore: number;
+  trackScore: number;
+};
+export type SavedCar = { carId: string; savedAt: string };
+export const savedCarInputSchema = z.object({
+  carId: z.string().min(1).max(80),
+});
+export const technologyLabelSchema = z.object({
+  label: z.string().trim().min(2).max(60),
+});
+export type TechnologyLabState = {
+  kv: { counter: number; updatedAt: string | null };
+  r2: { objects: Array<{ key: string; size: number; uploaded: string }> };
+  queue: {
+    recent: Array<{
+      id: string;
+      label: string;
+      status: string;
+      timestamp: string;
+    }>;
+  };
+};
+export type Problem = {
+  type: string;
+  title: string;
+  status: number;
+  detail: string;
+  correlationId: string;
+  errors?: Record<string, string[]>;
+};

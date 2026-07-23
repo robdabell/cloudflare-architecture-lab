@@ -1,0 +1,8 @@
+AUTH_MODE="local"
+LOCAL_IDENTITY='{"id":"local-architect","email":"architect@local.invalid","role":"Architect"}'
+AUTH_MODE="local"
+LOCAL_IDENTITY='{"id":"local-architect","email":"architect@local.test","role":"Architect"}'
+# Access mode is configured later with real values; never commit them.
+# ACCESS_TEAM_DOMAIN="your-team.cloudflareaccess.com"
+# ACCESS_AUD="your-access-application-audience"
+# ACCESS_ROLE_MAP='{"person@example.com":"Viewer"}'

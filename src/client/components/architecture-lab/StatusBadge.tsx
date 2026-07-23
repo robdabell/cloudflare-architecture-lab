@@ -1,0 +1,17 @@
+import { cn } from "@/client/lib/utils";
+export function StatusBadge({ status }: { status: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize",
+        status === "published"
+          ? "bg-success/15 text-success"
+          : status === "review"
+            ? "bg-warning/15 text-warning"
+            : "bg-muted text-muted-foreground",
+      )}
+    >
+      {status}
+    </span>
+  );
+}

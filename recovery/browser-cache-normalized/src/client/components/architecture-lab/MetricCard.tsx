@@ -1,0 +1,21 @@
+import type { LucideIcon } from "lucide-react";
+import { Card } from "../ui/card";
+export function MetricCard({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: string | number;
+  icon: LucideIcon;
+}) {
+  return (
+    <Card>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <Icon aria-hidden className="size-5 text-accent" />
+      </div>
+      <p className="mt-3 text-3xl font-bold">{value}</p>
+    </Card>
+  );
+}

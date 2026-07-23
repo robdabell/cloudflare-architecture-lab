@@ -1,0 +1,30 @@
+import { PageHeader } from "../components/architecture-lab/PageHeader";
+import { ProjectCard } from "../components/architecture-lab/ProjectCard";
+import { useProjects } from "../hooks/useProjects";
+export function ExplorePage() {
+  const { projects, loading, error } = useProjects();
+  return (
+    <>
+      <PageHeader
+        eyebrow="Architecture explorer"
+        title="Explore systems"
+        description="Open a project to inspect its stored service map in a read-only canvas."
+      />
+      {error && (
+        <p role="alert" className="text-destructive">
+          {error}
+        </p>
+      )}
+      {loading ? (
+        <p>Loading…</p>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {projects.map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+

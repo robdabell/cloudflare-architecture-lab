@@ -1,0 +1,23 @@
+import type { LucideIcon } from "lucide-react";
+import { Card } from "../ui/card";
+export function CapabilityCard({
+  name,
+  description,
+  icon: Icon,
+}: {
+  name: string;
+  description: string;
+  icon: LucideIcon;
+}) {
+  return (
+    <Card>
+      <Icon className="size-7 text-accent" aria-hidden />
+      <h2 className="mt-4 text-lg font-semibold">{name}</h2>
+      <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+      <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-success">
+        Configured
+      </p>
+    </Card>
+  );
+}
+

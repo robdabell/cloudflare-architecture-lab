@@ -1,0 +1,65 @@
+import type { SportsCar, SportsCarPreferences } from "@/shared/contracts";
+
+export type CarMatch = SportsCar & { matchScore: number; reasons: string[] };
+
+const budgetRank = { accessible: 0, serious: 1, exotic: 2 } as const;
+
+export function matchCars(
+  cars: SportsCar[],
+  preferences: SportsCarPreferences,
+): CarMatch[] {
+  return cars
+    .map((car) => {
+      let score = 0;
+      const reasons: string[] = [];
+      const budgetDistance = Math.abs(
+        budgetRank[preferences.budget] - budgetRank[car.priceBand],
+      );
+      score += budgetDistance === 0 ? 30 : budgetDistance === 1 ? 12 : 0;
+      if (budgetDistance === 0) reasons.push("Fits your budget band");
+
+      const useScore =
+        preferences.use === "daily"
+          ? car.dailyScore
+          : preferences.use === "track"
+            ? car.trackScore
+            : Math.round((car.dailyScore + car.trackScore) / 2);
+      score += useScore * 6;
+      if (useScore >= 4) reasons.push(`Strong ${preferences.use} fit`);
+
+      if (car.character === preferences.character) {
+        score += 18;
+        reasons.push(`Delivers ${car.character} character`);
+      }
+      if (preferences.roof === "either" || car.bodyStyle === preferences.roof) {
+        score += 10;
+        if (preferences.roof !== "either")
+          reasons.push(`Your preferred ${car.bodyStyle} roof`);
+      }
+      if (preferences.seats === "two" || car.seats >= 4) {
+        score += 6;
+        if (preferences.seats === "four" && car.seats >= 4)
+          reasons.push("Has occasional rear seats");
+      }
+      if (
+        preferences.powertrain === "any" ||
+        car.powertrain === preferences.powertrain
+      ) {
+        score += 6;
+        if (preferences.powertrain !== "any")
+          reasons.push(`${car.powertrain} powertrain`);
+      }
+      return {
+        ...car,
+        matchScore: Math.min(100, score),
+        reasons: reasons.slice(0, 3),
+      };
+    })
+    .sort(
+      (left, right) =>
+        right.matchScore - left.matchScore ||
+        `${left.make} ${left.model}`.localeCompare(
+          `${right.make} ${right.model}`,
+        ),
+    );
+}

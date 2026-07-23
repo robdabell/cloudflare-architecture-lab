@@ -1,0 +1,40 @@
+import { useCallback, useEffect, useState } from "react";
+import type { Project } from "@/shared/contracts";
+import { api } from "../lib/api";
+export function useProjects() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      setProjects(await api.listProjects());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load projects.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  useEffect(() => {
+    let active = true;
+    api
+      .listProjects()
+      .then((data) => {
+        if (active) setProjects(data);
+      })
+      .catch((cause: unknown) => {
+        if (active)
+          setError(
+            cause instanceof Error ? cause.message : "Could not load projects.",
+          );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  return { projects, loading, error, reload: load };
+}

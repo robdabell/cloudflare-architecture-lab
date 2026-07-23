@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloudflare-architecture-lab-dev",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-07-23",
+  "assets": {
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "architecture-lab-local",
+      "database_id": "REPLACE_WITH_ENVIRONMENT_SPECIFIC_D1_DATABASE_ID",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "kv_namespaces": [{ "binding": "LAB_KV" }],
+  "r2_buckets": [
+    { "binding": "LAB_R2", "bucket_name": "architecture-lab-local-artifacts" },
+  ],
+  "queues": {
+    "producers": [
+      { "binding": "LAB_QUEUE", "queue": "architecture-lab-local-events" },
+    ],
+    "consumers": [
+      {
+        "queue": "architecture-lab-local-events",
+        "max_batch_size": 5,
+        "max_batch_timeout": 1,
+        "max_retries": 2,
+      },
+    ],
+  },
+}

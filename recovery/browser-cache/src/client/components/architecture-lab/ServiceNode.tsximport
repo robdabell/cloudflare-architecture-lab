@@ -1,0 +1,25 @@
+import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { Database, Monitor, Server } from "lucide-react";
+export function ServiceNode({ data }: NodeProps) {
+  const kind = String(data.kind);
+  const Icon =
+    kind === "database" ? Database : kind === "client" ? Monitor : Server;
+  return (
+    <div className="w-52 rounded-xl border border-white/15 bg-architecture-node p-4 text-white shadow-lg">
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="!bg-architecture-edge"
+      />
+      <Icon className="size-5 text-orange-300" aria-hidden />
+      <p className="mt-2 font-semibold">{String(data.label)}</p>
+      <p className="mt-1 text-xs text-slate-300">{String(data.description)}</p>
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="!bg-architecture-edge"
+      />
+    </div>
+  );
+}
+

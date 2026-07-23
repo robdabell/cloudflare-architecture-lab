@@ -1,0 +1,163 @@
+export type PetPreferences = {
+  home: "compact" | "spacious" | "outdoor";
+  time: "low" | "moderate" | "high";
+  energy: "calm" | "balanced" | "active";
+  allergies: boolean;
+  noise: "quiet" | "flexible";
+  experience: "first-time" | "experienced";
+};
+
+export type PetMatch = {
+  id: string;
+  name: string;
+  emoji: string;
+  score: number;
+  reasons: string[];
+  watchOut: string;
+};
+
+type PetProfile = Omit<PetMatch, "score" | "reasons"> & {
+  homes: PetPreferences["home"][];
+  time: PetPreferences["time"];
+  energy: PetPreferences["energy"];
+  allergyFriendly: boolean;
+  quiet: boolean;
+  firstTimeFriendly: boolean;
+};
+
+const profiles: PetProfile[] = [
+  {
+    id: "cat",
+    name: "Cat",
+    emoji: "🐈",
+    homes: ["compact", "spacious"],
+    time: "moderate",
+    energy: "balanced",
+    allergyFriendly: false,
+    quiet: true,
+    firstTimeFriendly: true,
+    watchOut: "Cats still need daily play, enrichment, and long-term veterinary care.",
+  },
+  {
+    id: "dog",
+    name: "Dog",
+    emoji: "🐕",
+    homes: ["spacious", "outdoor"],
+    time: "high",
+    energy: "active",
+    allergyFriendly: false,
+    quiet: false,
+    firstTimeFriendly: true,
+    watchOut: "Dogs need consistent exercise, training, company, and a dependable care plan.",
+  },
+  {
+    id: "rabbit",
+    name: "Rabbit",
+    emoji: "🐇",
+    homes: ["compact", "spacious"],
+    time: "moderate",
+    energy: "calm",
+    allergyFriendly: false,
+    quiet: true,
+    firstTimeFriendly: false,
+    watchOut: "Rabbits need generous floor space, companionship, specialist care, and careful handling.",
+  },
+  {
+    id: "fish",
+    name: "Fish",
+    emoji: "🐠",
+    homes: ["compact", "spacious"],
+    time: "low",
+    energy: "calm",
+    allergyFriendly: true,
+    quiet: true,
+    firstTimeFriendly: true,
+    watchOut: "A healthy aquarium needs correct cycling, water testing, and species-specific space.",
+  },
+  {
+    id: "bird",
+    name: "Bird",
+    emoji: "🦜",
+    homes: ["compact", "spacious"],
+    time: "high",
+    energy: "active",
+    allergyFriendly: true,
+    quiet: false,
+    firstTimeFriendly: false,
+    watchOut: "Birds are social, intelligent, often noisy, and some species are a decades-long commitment.",
+  },
+  {
+    id: "reptile",
+    name: "Reptile",
+    emoji: "🦎",
+    homes: ["compact", "spacious"],
+    time: "low",
+    energy: "calm",
+    allergyFriendly: true,
+    quiet: true,
+    firstTimeFriendly: false,
+    watchOut: "Reptiles require precise heat, light, humidity, diet, and access to an exotic-pet vet.",
+  },
+];
+
+const levels = ["low", "moderate", "high"] as const;
+const energyLevels = ["calm", "balanced", "active"] as const;
+
+function distance<T extends string>(values: readonly T[], left: T, right: T) {
+  return Math.abs(values.indexOf(left) - values.indexOf(right));
+}
+
+export function matchPets(preferences: PetPreferences): PetMatch[] {
+  return profiles
+    .map((pet) => {
+      let score = pet.homes.includes(preferences.home) ? 24 : 4;
+      const reasons: string[] = [];
+
+      if (pet.homes.includes(preferences.home)) {
+        reasons.push("Fits your available living space");
+      }
+
+      const timeDistance = distance(levels, pet.time, preferences.time);
+      score += timeDistance === 0 ? 24 : timeDistance === 1 ? 12 : 0;
+      if (timeDistance === 0) reasons.push("Matches your daily care time");
+
+      const energyDistance = distance(
+        energyLevels,
+        pet.energy,
+        preferences.energy,
+      );
+      score += energyDistance === 0 ? 20 : energyDistance === 1 ? 10 : 0;
+      if (energyDistance === 0) reasons.push("Shares your preferred energy");
+
+      if (preferences.allergies) {
+        score += pet.allergyFriendly ? 20 : -35;
+        if (pet.allergyFriendly) reasons.push("Lower fur-allergy concern");
+      } else {
+        score += 10;
+      }
+
+      if (preferences.noise === "quiet") {
+        score += pet.quiet ? 8 : -8;
+        if (pet.quiet) reasons.push("Usually suits a quieter home");
+      } else {
+        score += 4;
+      }
+
+      if (preferences.experience === "first-time") {
+        score += pet.firstTimeFriendly ? 4 : 0;
+      } else {
+        score += 4;
+      }
+
+      return {
+        id: pet.id,
+        name: pet.name,
+        emoji: pet.emoji,
+        score: Math.max(0, Math.min(100, score)),
+        reasons: reasons.slice(0, 3),
+        watchOut: pet.watchOut,
+      };
+    })
+    .sort((left, right) => right.score - left.score || left.name.localeCompare(right.name));
+}
+
