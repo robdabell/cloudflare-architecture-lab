@@ -1,14 +1,23 @@
 # Cloudflare Deployment Preparation
 
-Do not deploy the checked-in configuration as-is. Later, an operator should:
+The development environment bindings were provisioned on 2026-07-23 with the
+`cloudflare-architecture-lab-dev*` namespace and are recorded in
+`wrangler.jsonc`. No Worker has been deployed.
 
-1. Create environment-specific D1, KV, R2, and Queue resources named with the `cloudflare-architecture-lab-*` prefix.
-2. Replace only the explicit configuration markers with those real resource identifiers; never copy identifiers from another project.
-3. Create a Cloudflare Access application protecting the Worker hostname and record its application audience.
-4. Set `AUTH_MODE=access`, `ACCESS_TEAM_DOMAIN`, and `ACCESS_AUD` as Worker configuration/secrets.
-5. Set `ACCESS_ROLE_MAP` server-side to map authenticated Access email claims to the four application roles. Do not expose it to browser code.
-6. Configure Access policies determining who may reach the application. The Worker still validates the Access JWT and enforces application roles.
-7. Apply D1 migrations remotely only after verifying the target database belongs to this project and environment.
-8. Run the full validation suite and a Wrangler dry run, review the binding list, then obtain explicit deployment authorization.
+Before activating a deployment, an operator must:
 
-No Access application, policy, identity, resource, or deployment was created during restoration.
+1. Create a Cloudflare Access application protecting the exact development Worker hostname and record its real audience. Do not invent it.
+2. Add `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`, and `ACCESS_ROLE_MAP` as Worker runtime secrets or variables in the Cloudflare dashboard. `AUTH_MODE=access` is already checked in and fails closed while these values are absent.
+3. Configure an Access Allow policy for intended users. Do not use a Bypass policy for protected application paths.
+4. Connect `robdabell/cloudflare-architecture-lab` to the `cloudflare-architecture-lab-dev` Worker in Workers Builds, selecting the intended Git branch.
+5. Use `npm run build` as the build command. Initially use `npx wrangler versions upload` as the deploy command so the build creates a preview version without promoting it.
+6. Run the full validation suite and `npm run deploy:dry-run`, then review the binding list.
+7. Verify authentication, every role, D1 reads/writes, KV, R2, and Queue consumption on the preview URL.
+8. Only after review, change the production deploy command to `npx wrangler deploy` or explicitly promote the verified version.
+
+For production, provision a separate `cloudflare-architecture-lab-production*`
+resource set and Access application. Never point production at these development
+bindings.
+
+The Access application, policy, identity configuration, GitHub build connection,
+and Worker deployment are deliberately not created by repository configuration.

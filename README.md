@@ -28,7 +28,7 @@ npm run build
 
 ## Deployment
 
-Deployment is intentionally not ready-to-run: `wrangler.jsonc` contains an explicit D1 identifier marker and local-style resource names. Follow [the deployment guide](docs/deployment.md) and replace markers only with resources created for this project and environment.
+The isolated development bindings are configured, but deployment remains fail-closed until a real Cloudflare Access application and its runtime identity settings are supplied. Follow [the deployment guide](docs/deployment.md); begin with a preview version rather than an active deployment.
 
 ## Recovery provenance
 

@@ -3,6 +3,9 @@
   "name": "cloudflare-architecture-lab-dev",
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-07-23",
+  "vars": {
+    "AUTH_MODE": "access",
+  },
   "assets": {
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
@@ -10,22 +13,30 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "architecture-lab-local",
-      "database_id": "REPLACE_WITH_ENVIRONMENT_SPECIFIC_D1_DATABASE_ID",
+      "database_name": "cloudflare-architecture-lab-dev",
+      "database_id": "ff8cd726-34f0-4b99-b2f0-de337141af0e",
       "migrations_dir": "migrations",
     },
   ],
-  "kv_namespaces": [{ "binding": "LAB_KV" }],
+  "kv_namespaces": [
+    { "binding": "LAB_KV", "id": "f01c62eb91fb48d08b21e0a62372e368" },
+  ],
   "r2_buckets": [
-    { "binding": "LAB_R2", "bucket_name": "architecture-lab-local-artifacts" },
+    {
+      "binding": "LAB_R2",
+      "bucket_name": "cloudflare-architecture-lab-dev-artifacts",
+    },
   ],
   "queues": {
     "producers": [
-      { "binding": "LAB_QUEUE", "queue": "architecture-lab-local-events" },
+      {
+        "binding": "LAB_QUEUE",
+        "queue": "cloudflare-architecture-lab-dev-events",
+      },
     ],
     "consumers": [
       {
-        "queue": "architecture-lab-local-events",
+        "queue": "cloudflare-architecture-lab-dev-events",
         "max_batch_size": 5,
         "max_batch_timeout": 1,
         "max_retries": 2,
